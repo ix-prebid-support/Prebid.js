@@ -2,7 +2,6 @@ import * as utils from '../src/utils';
 import { BANNER, VIDEO } from '../src/mediaTypes';
 import find from 'core-js/library/fn/array/find';
 import { config } from '../src/config';
-import isArray from 'core-js/library/fn/array/is-array';
 import isInteger from 'core-js/library/fn/number/is-integer';
 import { registerBidder } from '../src/adapters/bidderFactory';
 
@@ -141,7 +140,7 @@ function parseBid(rawBid, currency, bidRequest) {
  * @return {boolean}      True if this is a valid size format, and false otherwise.
  */
 function isValidSize(size) {
-  return isArray(size) && size.length === 2 && isInteger(size[0]) && isInteger(size[1]);
+  return Array.isArray(size) && size.length === 2 && isInteger(size[0]) && isInteger(size[1]);
 }
 
 /**
