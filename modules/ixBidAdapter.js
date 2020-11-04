@@ -676,6 +676,11 @@ export const spec = {
       return false;
     }
 
+    if (!includesSize(bid.sizes, bid.params.size) && !includesSize(utils.deepAccess(bid, 'mediaTypes.video.playerSize', []), bid.params.size)) {
+      utils.logError('ix bidder params: bid size is not included in ad unit sizes.');
+      return false;
+    }
+
     if (bid.hasOwnProperty('mediaTypes') && !(mediaTypeBannerSizes || mediaTypeVideoPlayerSize)) {
       return false;
     }
