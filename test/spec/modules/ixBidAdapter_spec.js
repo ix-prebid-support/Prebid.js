@@ -148,6 +148,66 @@ describe('IndexexchangeAdapter', function () {
     }
   ];
 
+  const DEFAULT_MULTIFORMAT_BANNER_VALID_BID = [
+    {
+      bidder: 'ix',
+      params: {
+        siteId: '123',
+        size: [300, 250]
+      },
+      sizes: [[300, 250], [300, 600]],
+      mediaTypes: {
+        video: {
+          context: 'outstream',
+          playerSize: [[400, 100]]
+        },
+        banner: {
+          sizes: [[300, 250], [300, 600]]
+        }
+      },
+      adUnitCode: 'div-gpt-ad-1460505748562-0',
+      transactionId: '173f49a8-7549-4218-a23c-e7ba59b47230',
+      bidId: '1a2b3c4e',
+      bidderRequestId: '11a22b33c44e',
+      auctionId: '1aa2bb3cc4de',
+      schain: SAMPLE_SCHAIN
+    }
+  ];
+
+  const DEFAULT_MULTIFORMAT_VIDEO_VALID_BID = [
+    {
+      bidder: 'ix',
+      params: {
+        siteId: '456',
+        video: {
+          skippable: false,
+          mimes: [
+            'video/mp4',
+            'video/webm'
+          ],
+          minduration: 0
+        },
+        size: [400, 100]
+      },
+      sizes: [[300, 250], [300, 600]],
+      mediaTypes: {
+        video: {
+          context: 'outstream',
+          playerSize: [[400, 100]]
+        },
+        banner: {
+          sizes: [[300, 250], [300, 600]]
+        }
+      },
+      adUnitCode: 'div-gpt-ad-1460505748562-0',
+      transactionId: '173f49a8-7549-4218-a23c-e7ba59b47230',
+      bidId: '1a2b3c4e',
+      bidderRequestId: '11a22b33c44e',
+      auctionId: '1aa2bb3cc4de',
+      schain: SAMPLE_SCHAIN
+    }
+  ];
+
   const DEFAULT_BANNER_BID_RESPONSE = {
     cur: 'USD',
     id: '11a22b33c44d',
@@ -435,6 +495,16 @@ describe('IndexexchangeAdapter', function () {
       delete bid.mediaTypes;
       bid.mediaType = 'video';
       bid.sizes = [[400, 100]];
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+    });
+
+    it('should return true for banner bid when there are multiple mediaTypes (banner, outstream)', function () {
+      const bid = utils.deepClone(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0]);
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+    });
+
+    it('should return true for video bid when there are multiple mediaTypes (banner, outstream)', function () {
+      const bid = utils.deepClone(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0]);
       expect(spec.isBidRequestValid(bid)).to.equal(true);
     });
 
