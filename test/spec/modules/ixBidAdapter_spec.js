@@ -126,7 +126,9 @@ describe('IndexexchangeAdapter', function () {
             'video/mp4',
             'video/webm'
           ],
-          minduration: 0
+          minduration: 0,
+          maxduration: 60,
+          protocols: [2]
         },
         size: [400, 100]
       },
