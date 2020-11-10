@@ -677,7 +677,7 @@ export const spec = {
     }
 
     if (!includesSize(bid.sizes, bid.params.size) && !includesSize(utils.deepAccess(bid, 'mediaTypes.video.playerSize', []), bid.params.size)) {
-      utils.logError('ix bidder params: bid size is not included in ad unit sizes.');
+      utils.logError('ix bidder params: bid size is not included in ad unit sizes or player size.');
       return false;
     }
 
