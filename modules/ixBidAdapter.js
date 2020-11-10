@@ -659,6 +659,14 @@ export const spec = {
    * @return {boolean}     True if this is a valid bid, and false otherwise.
    */
   isBidRequestValid: function (bid) {
+    const mediaTypeVideoRef = utils.deepAccess(bid, 'mediaTypes.video');
+    const paramsVideoRef = utils.deepAccess(bid, 'params.video');
+    const paramsSize = utils.deepAccess(bid, 'params.size');
+    const mediaTypeBannerSizes = utils.deepAccess(bid, 'mediaTypes.banner.sizes');
+    const mediaTypeVideoPlayerSize = utils.deepAccess(bid, 'mediaTypes.video.playerSize');
+    const hasBidFloor = bid.params.hasOwnProperty('bidFloor');
+    const hasBidFloorCur = bid.params.hasOwnProperty('bidFloorCur');
+
     if (!isValidSize(bid.params.size)) {
       utils.logError('ix bidder params: bid size has invalid format.');
       return false;
@@ -668,20 +676,20 @@ export const spec = {
       return false;
     }
 
-    if (bid.hasOwnProperty('mediaTypes') && !(utils.deepAccess(bid, 'mediaTypes.banner.sizes') || utils.deepAccess(bid, 'mediaTypes.video.playerSize'))) {
+    if (bid.hasOwnProperty('mediaTypes') && !(mediaTypeBannerSizes || mediaTypeVideoPlayerSize)) {
       return false;
     }
 
-    if (utils.deepAccess(bid, 'mediaTypes.banner') && !includesSize(utils.deepAccess(bid, 'mediaTypes.banner.sizes'), utils.deepAccess(bid, 'params.size'))) {
+    if (utils.deepAccess(bid, 'mediaTypes.banner') && !includesSize(mediaTypeBannerSizes, paramsSize)) {
       utils.logError('ix bidder params: banner bid size is not included in ad unit sizes.');
       return false;
     }
 
-    if (utils.deepAccess(bid, 'mediaTypes.video')) {
+    if (mediaTypeVideoRef && paramsVideoRef) {
       const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols'];
       let isParamsLevelValid = true;
       for (let property of requiredIXParams) {
-        if (!utils.deepAccess(bid, 'mediaTypes.video').hasOwnProperty(property) && !utils.deepAccess(bid, 'params.video').hasOwnProperty(property)) {
+        if (!mediaTypeVideoRef.hasOwnProperty(property) && !paramsVideoRef.hasOwnProperty(property)) {
           utils.logError('ix bidder params: ' + property + ' is not included in either the adunit or params level');
           isParamsLevelValid = false;
         }
@@ -691,7 +699,7 @@ export const spec = {
         return false;
       }
 
-      if (!includesSize(utils.deepAccess(bid, 'mediaTypes.video.playerSize'), utils.deepAccess(bid, 'params.size'))) {
+      if (!includesSize(mediaTypeVideoPlayerSize, paramsSize)) {
         utils.logError('ix bidder params: video bid size is not included in ad unit sizes.');
         return false;
       }
@@ -701,9 +709,6 @@ export const spec = {
       utils.logError('ix bidder params: siteId must be string or number value.');
       return false;
     }
-
-    const hasBidFloor = bid.params.hasOwnProperty('bidFloor');
-    const hasBidFloorCur = bid.params.hasOwnProperty('bidFloorCur');
 
     if (hasBidFloor || hasBidFloorCur) {
       if (!(hasBidFloor && hasBidFloorCur && isValidBidFloorParams(bid.params.bidFloor, bid.params.bidFloorCur))) {
