@@ -4,7 +4,6 @@ import { config } from '../src/config.js';
 import find from 'core-js-pure/features/array/find.js';
 import isInteger from 'core-js-pure/features/number/is-integer.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
-import { isNative } from 'lodash';
 
 const BIDDER_CODE = 'ix';
 const SECURE_BID_URL = 'https://htlb.casalemedia.com/cygnus';
@@ -486,7 +485,7 @@ function getIxMFSettings(validBidRequests) {
   var adUnitdiags = {
     isMF: false,
     renderer: false,
-    isNative: false,
+    isNativeMedia: false,
   };
   var adUnitMap = {};
 
@@ -501,7 +500,7 @@ function getIxMFSettings(validBidRequests) {
       if (bid.mediaTypes.length > 1) {
         adUnitMap[trId].isMF = true;
         if (bid.mediaTypes.hasOwnProperty('native')) {
-          adUnitMap[trId].isNative = true;
+          adUnitMap[trId].isNativeMedia = true;
         }
       }
       if (bid.mediaTypes.hasOwnProperty('video')
@@ -533,7 +532,7 @@ function getIxMFSettings(validBidRequests) {
       ixdiagMF['mfUnits']++;
     }
     /// if one ad unit is native set the request diag to native
-    if (adUnit.hasOwnProperty('isNative') && adUnit.isNativeMedia === true) {
+    if (adUnit.hasOwnProperty('isNativeMedia') && adUnit.isNativeMedia === true) {
       ixdiagMF['isNativeMedia'] = true;
     }
     // count outstream units
