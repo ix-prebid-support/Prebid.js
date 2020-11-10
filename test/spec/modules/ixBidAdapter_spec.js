@@ -1441,6 +1441,53 @@ describe('IndexexchangeAdapter', function () {
     });
   });
 
+  describe('buildRequestMultiFormat', function () {
+    describe('only banner bidder params set', function () {
+      const request = spec.buildRequests(DEFAULT_MULTIFORMAT_BANNER_VALID_BID)
+
+      const bannerImp = JSON.parse(request[0].data.r).imp[0];
+      expect(JSON.parse(request[0].data.r).imp).to.have.lengthOf(2);
+      expect(JSON.parse(request[0].data.v)).to.equal(BANNER_ENDPOINT_VERSION);
+      expect(bannerImp.id).to.equal(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0].bidId);
+      expect(bannerImp.banner).to.exist;
+      expect(bannerImp.banner.w).to.equal(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0].params.size[0]);
+      expect(bannerImp.banner.h).to.equal(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0].params.size[1]);
+    });
+
+    describe('only video bidder params set', function () {
+      const request = spec.buildRequests(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID);
+
+      const videoImp = JSON.parse(request[0].data.r).imp[0];
+      expect(JSON.parse(request[0].data.r).imp).to.have.lengthOf(1);
+      expect(JSON.parse(request[0].data.v)).to.equal(VIDEO_ENDPOINT_VERSION);
+      expect(videoImp.id).to.equal(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0].bidId);
+      expect(videoImp.video).to.exist;
+      expect(videoImp.video.w).to.equal(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0].params.size[0]);
+      expect(videoImp.video.h).to.equal(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0].params.size[1]);
+    });
+    describe('both banner and video bidder params set', function () {
+      const request = spec.buildRequests([DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0], DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0]]);
+
+      it('should return valid banner and video requests', function () {
+        const bannerImp = JSON.parse(request[0].data.r).imp[0];
+        expect(JSON.parse(request[0].data.r).imp).to.have.lengthOf(2);
+        expect(JSON.parse(request[0].data.v)).to.equal(BANNER_ENDPOINT_VERSION);
+        expect(bannerImp.id).to.equal(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0].bidId);
+        expect(bannerImp.banner).to.exist;
+        expect(bannerImp.banner.w).to.equal(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0].params.size[0]);
+        expect(bannerImp.banner.h).to.equal(DEFAULT_MULTIFORMAT_BANNER_VALID_BID[0].params.size[1]);
+
+        const videoImp = JSON.parse(request[1].data.r).imp[0];
+        expect(JSON.parse(request[1].data.r).imp).to.have.lengthOf(1);
+        expect(JSON.parse(request[1].data.v)).to.equal(VIDEO_ENDPOINT_VERSION);
+        expect(videoImp.id).to.equal(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0].bidId);
+        expect(videoImp.video).to.exist;
+        expect(videoImp.video.w).to.equal(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0].params.size[0]);
+        expect(videoImp.video.h).to.equal(DEFAULT_MULTIFORMAT_VIDEO_VALID_BID[0].params.size[1]);
+      });
+    });
+  });
+
   describe('interpretResponse', function () {
     it('should get correct bid response for banner ad', function () {
       const expectedParse = [

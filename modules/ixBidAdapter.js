@@ -765,12 +765,11 @@ export const spec = {
           }
 
           videoImps[validBidRequest.transactionId].ixImps.push(bidToVideoImp(validBidRequest));
-        } else {
-          utils.logError('Bid size is not included in video playerSize')
         }
       }
-      if (validBidRequest.mediaType === BANNER || utils.deepAccess(validBidRequest, 'mediaTypes.banner') ||
-        (!validBidRequest.mediaType && !validBidRequest.mediaTypes)) {
+      if (validBidRequest.mediaType === BANNER ||
+          (utils.deepAccess(validBidRequest, 'mediaTypes.banner') && includesSize(utils.deepAccess(validBidRequest, 'mediaTypes.banner.sizes'), validBidRequest.params.size)) ||
+          (!validBidRequest.mediaType && !validBidRequest.mediaTypes)) {
         let imp = bidToBannerImp(validBidRequest);
 
         if (!bannerImps.hasOwnProperty(validBidRequest.transactionId)) {
