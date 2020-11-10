@@ -472,9 +472,33 @@ describe('IndexexchangeAdapter', function () {
 
     it('should return true when required video properties are at the adunit level', function () {
       const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
-      delete bid.params.mimes;
+      delete bid.params.video.mimes;
       bid.mediaTypes.video.mimes = ['video/mp4'];
       expect(spec.isBidRequestValid(bid)).to.equal(true);
+    });
+
+    it('should return true if protocols exists but protocol doesn\'t', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+      delete bid.params.video.protocols;
+      bid.mediaTypes.video.protocols = 1;
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+    });
+
+    it('should return true if protocol exists but protocols doesn\'t', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      delete bid.params.video.protocols;
+      bid.params.video.protocol = 1;
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+      delete bid.params.video.protocol;
+      bid.mediaTypes.video.protocol = 1;
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+    });
+
+    it('should return false if both protocol/protocols are missing', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      delete bid.params.video.protocols;
+      expect(spec.isBidRequestValid(bid)).to.equal(false);
     });
   });
 

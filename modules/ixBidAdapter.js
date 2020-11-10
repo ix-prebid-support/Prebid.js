@@ -47,7 +47,7 @@ function bidToVideoImp(bid) {
   const videoAdUnitRef = utils.deepAccess(bid, 'mediaTypes.video');
   const context = utils.deepAccess(bid, 'mediaTypes.video.context');
   const videoAdUnitWhitelist = [
-    'mimes', 'minduration', 'maxduration', 'protocols',
+    'mimes', 'minduration', 'maxduration', 'protocols', 'protocol',
     'startdelay', 'placement', 'linearity', 'skip', 'skipmin',
     'skipafter', 'sequence', 'battr', 'maxextended', 'minbitrate',
     'maxbitrate', 'boxingallowed', 'playbackmethod', 'playbackend',
@@ -686,10 +686,15 @@ export const spec = {
     }
 
     if (mediaTypeVideoRef && paramsVideoRef) {
-      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols'];
+      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols', 'protocol'];
       let isParamsLevelValid = true;
       for (let property of requiredIXParams) {
         if (!mediaTypeVideoRef.hasOwnProperty(property) && !paramsVideoRef.hasOwnProperty(property)) {
+          const isProtocolValid = !!((property === 'protocol' && (mediaTypeVideoRef.hasOwnProperty('protocols') || paramsVideoRef.hasOwnProperty('protocols'))));
+          const isProtocolsValid = !!((property === 'protocols' && (mediaTypeVideoRef.hasOwnProperty('protocol') || paramsVideoRef.hasOwnProperty('protocol'))));
+          if (isProtocolValid || isProtocolsValid) {
+            continue;
+          }
           utils.logError('ix bidder params: ' + property + ' is not included in either the adunit or params level');
           isParamsLevelValid = false;
         }
