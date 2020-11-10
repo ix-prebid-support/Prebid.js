@@ -488,7 +488,7 @@ function getIxMFSettings(validBidRequests) {
     isNativeMedia: false,
   };
   var adUnitMap = {};
-
+  // create ad unit map and collect the required diag properties
   for (var i = 0; i < validBidRequests.length; ++i) {
     var bid = validBidRequests[i];
     var trId = bid.transactionId;
@@ -525,6 +525,7 @@ function getIxMFSettings(validBidRequests) {
     renderer: true
   };
 
+  // Iterate over adunit map and populate MF diag object
   const adIds = Object.keys(adUnitMap);
   for (var i = 0; i < adIds.length; ++i) {
     var adUnit = adUnitMap[adIds[i]];
