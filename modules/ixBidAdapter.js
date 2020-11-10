@@ -44,12 +44,20 @@ function bidToBannerImp(bid) {
  */
 function bidToVideoImp(bid) {
   const imp = bidToImp(bid);
+  const videoAdUnitRef = utils.deepAccess(bid, 'mediaTypes.video');
+  const context = utils.deepAccess(bid, 'mediaTypes.video.context');
+  const videoAdUnitWhitelist = [
+    'mimes', 'minduration', 'maxduration', 'protocols',
+    'startdelay', 'placement', 'linearity', 'skip', 'skipmin',
+    'skipafter', 'sequence', 'battr', 'maxextended', 'minbitrate',
+    'maxbitrate', 'boxingallowed', 'playbackmethod', 'playbackend',
+    'delivery', 'pos', 'companionad', 'api', 'companiontype', 'ext'
+  ];
 
   imp.video = utils.deepClone(bid.params.video)
   imp.video.w = bid.params.size[0];
   imp.video.h = bid.params.size[1];
 
-  const context = utils.deepAccess(bid, 'mediaTypes.video.context');
   if (context) {
     if (context === 'instream') {
       imp.video.placement = 1;
@@ -57,6 +65,12 @@ function bidToVideoImp(bid) {
       imp.video.placement = 4;
     } else {
       utils.logWarn(`ix bidder params: video context '${context}' is not supported`);
+    }
+  }
+
+  for (let adUnitProperty in videoAdUnitRef) {
+    if (videoAdUnitWhitelist.includes(adUnitProperty)) {
+      imp.video[adUnitProperty] = videoAdUnitRef[adUnitProperty];
     }
   }
 
@@ -650,17 +664,37 @@ export const spec = {
       return false;
     }
 
-    if (!includesSize(bid.sizes, bid.params.size)) {
-      utils.logError('ix bidder params: bid size is not included in ad unit sizes.');
-      return false;
-    }
-
     if (bid.hasOwnProperty('mediaType') && !(utils.contains(SUPPORTED_AD_TYPES, bid.mediaType))) {
       return false;
     }
 
     if (bid.hasOwnProperty('mediaTypes') && !(utils.deepAccess(bid, 'mediaTypes.banner.sizes') || utils.deepAccess(bid, 'mediaTypes.video.playerSize'))) {
       return false;
+    }
+
+    if (utils.deepAccess(bid, 'mediaTypes.banner') && !includesSize(utils.deepAccess(bid, 'mediaTypes.banner.sizes'), utils.deepAccess(bid, 'params.size'))) {
+      utils.logError('ix bidder params: banner bid size is not included in ad unit sizes.');
+      return false;
+    }
+
+    if (utils.deepAccess(bid, 'mediaTypes.video')) {
+      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols'];
+      let isParamsLevelValid = true;
+      for (let property of requiredIXParams) {
+        if (!utils.deepAccess(bid, 'mediaTypes.video').hasOwnProperty(property) && !utils.deepAccess(bid, 'params.video').hasOwnProperty(property)) {
+          utils.logError('ix bidder params: ' + property + ' is not included in either the adunit or params level');
+          isParamsLevelValid = false;
+        }
+      }
+
+      if (!isParamsLevelValid) {
+        return false;
+      }
+
+      if (!includesSize(utils.deepAccess(bid, 'mediaTypes.video.playerSize'), utils.deepAccess(bid, 'params.size'))) {
+        utils.logError('ix bidder params: video bid size is not included in ad unit sizes.');
+        return false;
+      }
     }
 
     if (typeof bid.params.siteId !== 'string' && typeof bid.params.siteId !== 'number') {

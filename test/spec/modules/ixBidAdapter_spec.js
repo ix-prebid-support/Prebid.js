@@ -461,6 +461,19 @@ describe('IndexexchangeAdapter', function () {
       bid.params.bidFloorCur = 70;
       expect(spec.isBidRequestValid(bid)).to.equal(false);
     });
+
+    it('should return false when required video properties are missing on both adunit & param levels', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      delete bid.params.video.mimes;
+      expect(spec.isBidRequestValid(bid)).to.equal(false);
+    });
+
+    it('should return true when required video properties are at the adunit level', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      delete bid.params.mimes;
+      bid.mediaTypes.video.mimes = ['video/mp4'];
+      expect(spec.isBidRequestValid(bid)).to.equal(true);
+    });
   });
 
   describe('buildRequestsIdentity', function () {
@@ -1291,6 +1304,44 @@ describe('IndexexchangeAdapter', function () {
       expect(impression.video).to.exist;
       expect(impression.video.placement).to.exist;
       expect(impression.video.placement).to.equal(4);
+    });
+
+    it('should override whitelisted param level video properties with adunit level video params if both are configured', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      bid.mediaTypes.video.context = 'outstream';
+      bid.mediaTypes.video.protocols = [1];
+      bid.mediaTypes.video.mimes = ['video/override'];
+      const request = spec.buildRequests([bid])[0];
+      const impression = JSON.parse(request.data.r).imp[0];
+
+      expect(impression.video.protocols[0]).to.equal(1);
+      expect(impression.video.mimes[0]).to.equal('video/override');
+    });
+
+    it('should not use video adunit level properties in imp object if they are not whitelisted', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      bid.mediaTypes.video.context = 'outstream';
+      bid.mediaTypes.video.random = true;
+      const request = spec.buildRequests([bid])[0];
+      const impression = JSON.parse(request.data.r).imp[0];
+
+      expect(impression.video.random).to.not.exist;
+    });
+
+    it('should use whitelisted adunit level video properties in imp object if they are not configured at params level', function () {
+      const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
+      bid.mediaTypes.video.context = 'outstream';
+      delete bid.params.video.protocols;
+      delete bid.params.video.mimes;
+      bid.mediaTypes.video.protocols = [6];
+      bid.mediaTypes.video.mimes = ['video/mp4'];
+      bid.mediaTypes.video.api = 2;
+      const request = spec.buildRequests([bid])[0];
+      const impression = JSON.parse(request.data.r).imp[0];
+
+      expect(impression.video.protocols[0]).to.equal(6);
+      expect(impression.video.api).to.equal(2);
+      expect(impression.video.mimes[0]).to.equal('video/mp4');
     });
   });
 
