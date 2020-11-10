@@ -4,6 +4,7 @@ import { config } from '../src/config.js';
 import find from 'core-js-pure/features/array/find.js';
 import isInteger from 'core-js-pure/features/number/is-integer.js';
 import { registerBidder } from '../src/adapters/bidderFactory.js';
+import { isNative } from 'lodash';
 
 const BIDDER_CODE = 'ix';
 const SECURE_BID_URL = 'https://htlb.casalemedia.com/cygnus';
@@ -285,6 +286,14 @@ function buildRequest(validBidRequests, bidderRequest, impressions, version) {
   r.ext.source = 'prebid';
   r.ext.ixdiag = {};
 
+  // getting ixdiags for adunits of the video, outstream & multi format (MF) style
+  let ixdiagMF = getIxMFSettings(validBidRequests);
+  for (var key in ixdiagMF) {
+    if (ixdiagMF.hasOwnProperty(key)) {
+      r.ext.ixdiag[key] = ixdiagMF[key];
+    }
+  }
+
   // if an schain is provided, send it along
   if (validBidRequests[0].schain) {
     r.source = {
@@ -382,7 +391,7 @@ function buildRequest(validBidRequests, bidderRequest, impressions, version) {
     data: payload
   };
 
-  const BASE_REQ_SIZE = new Blob([`${request.url}${utils.parseQueryStringParameters({...request.data, r: JSON.stringify(r)})}`]).size;
+  const BASE_REQ_SIZE = new Blob([`${request.url}${utils.parseQueryStringParameters({ ...request.data, r: JSON.stringify(r) })}`]).size;
   let currReqSize = BASE_REQ_SIZE;
 
   const MAX_REQ_SIZE = 8000;
@@ -466,6 +475,81 @@ function buildRequest(validBidRequests, bidderRequest, impressions, version) {
 
   return requests;
 }
+
+/**
+ * 
+ * @param {array} validBidRequests  The bid requests from prebid
+ * @return {Object} IX diag for MultiFormat ad units
+ */
+function getIxMFSettings(validBidRequests) {
+
+  var adUnitdiags = {
+    isMF: false,
+    renderer: false,
+    isNative: false,
+  };
+  var adUnitMap = {};
+
+  for (var i = 0; i < validBidRequests.length; ++i) {
+    var bid = validBidRequests[i];
+    var trId = bid.transactionId;
+    if (!adUnitMap.hasOwnProperty(trId)) {
+      adUnitMap[trId] = adUnitdiags;
+    }
+
+    if (bid.hasOwnProperty('mediaTypes')) {
+      if (bid.mediaTypes.length > 1) {
+        adUnitMap[trId].isMF = true;
+        if (bid.mediaTypes.hasOwnProperty('native')) {
+          adUnitMap[trId].isNative = true;
+        }
+      }
+      if (bid.mediaTypes.hasOwnProperty('video')
+        && bid.mediaTypes.video.hasOwnProperty('context')) {
+        if (bid.mediaTypes.video.context === 'outstream') {
+          adUnitMap[trId].isOutstream = true;
+          if (bid.hasOwnProperty('renderer')) {
+            adUnitMap[trId].renderer = true;
+          } else {
+            adUnitMap[trId].renderer = false;
+          }
+        }
+      }
+    }
+  }
+
+  var ixdiagMF = {
+    mfUnits: 0,
+    outstreamUnits: 0,
+    isNativeMedia: false,
+    totalAdUnits: 0,
+    renderer: true
+  };
+
+  const adIds = Object.keys(adUnitMap);
+  for (var i = 0; i < adIds.length; ++i) {
+    var adUnit = adUnitMap[adIds[i]];
+    if (adUnit.hasOwnProperty('isMF') && adUnit.isMF === true) {
+      ixdiagMF['mfUnits']++;
+    }
+    /// if one ad unit is native set the request diag to native
+    if (adUnit.hasOwnProperty('isNative') && adUnit.isNativeMedia === true) {
+      ixdiagMF['isNativeMedia'] = true;
+    }
+    // count outstream units
+    if (adUnit.hasOwnProperty('isOutstream') && adUnit.isOutstream === true) {
+      ixdiagMF['outstreamUnits']++;
+    }
+    // if any one ad unit is missing renderer, set renderer status to false in diags
+    if (adUnit.hasOwnProperty('renderer')) {
+      ixdiagMF['renderer'] = ixdiagMF['renderer'] && adUnit.renderer;
+    }
+    ixdiagMF['totalAdUnits']++;
+  }
+
+  return ixdiagMF;
+}
+
 /**
  *
  * @param {Object} impressions containing ixImps and possibly missingImps
@@ -525,7 +609,8 @@ function updateMissingSizes(validBidRequest, missingBannerSizes, imp) {
     if (utils.deepAccess(validBidRequest, 'mediaTypes.banner.sizes')) {
       let sizeList = utils.deepClone(validBidRequest.mediaTypes.banner.sizes);
       removeFromSizes(sizeList, validBidRequest.params.size);
-      let newAdUnitEntry = { 'missingSizes': sizeList,
+      let newAdUnitEntry = {
+        'missingSizes': sizeList,
         'impression': imp
       };
       missingBannerSizes[transactionID] = newAdUnitEntry;
@@ -616,7 +701,7 @@ export const spec = {
       detectMissingSizes: true,
     };
 
-    const ixConfig = {...DEFAULT_IX_CONFIG, ...config.getConfig('ix')};
+    const ixConfig = { ...DEFAULT_IX_CONFIG, ...config.getConfig('ix') };
 
     for (let i = 0; i < validBidRequests.length; i++) {
       validBidRequest = validBidRequests[i];
@@ -636,7 +721,7 @@ export const spec = {
         }
       }
       if (validBidRequest.mediaType === BANNER || utils.deepAccess(validBidRequest, 'mediaTypes.banner') ||
-          (!validBidRequest.mediaType && !validBidRequest.mediaTypes)) {
+        (!validBidRequest.mediaType && !validBidRequest.mediaTypes)) {
         let imp = bidToBannerImp(validBidRequest);
 
         if (!bannerImps.hasOwnProperty(validBidRequest.transactionId)) {
@@ -726,7 +811,7 @@ export const spec = {
    * @param {Boolean} isOpenRtb boolean to check openrtb2 protocol
    * @return {Object} params bid params
    */
-  transformBidParams: function(params, isOpenRtb) {
+  transformBidParams: function (params, isOpenRtb) {
     return utils.convertTypes({
       'siteID': 'number'
     }, params);
