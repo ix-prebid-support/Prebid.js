@@ -69,7 +69,7 @@ function bidToVideoImp(bid) {
   }
 
   for (let adUnitProperty in videoAdUnitRef) {
-    if (videoAdUnitWhitelist.includes(adUnitProperty)) {
+    if (videoAdUnitWhitelist.includes(adUnitProperty) && !imp.video.hasOwnProperty(adUnitProperty)) {
       imp.video[adUnitProperty] = videoAdUnitRef[adUnitProperty];
     }
   }
@@ -490,12 +490,11 @@ function buildRequest(validBidRequests, bidderRequest, impressions, version) {
 }
 
 /**
- * 
+ *
  * @param {array} validBidRequests  The bid requests from prebid
  * @return {Object} IX diag for MultiFormat ad units
  */
 function getIxMFSettings(validBidRequests) {
-
   var adUnitdiags = {
     isMF: false,
     renderer: false,
@@ -517,8 +516,8 @@ function getIxMFSettings(validBidRequests) {
           adUnitMap[trId].isNativeMedia = true;
         }
       }
-      if (bid.mediaTypes.hasOwnProperty('video')
-        && bid.mediaTypes.video.hasOwnProperty('context')) {
+      if (bid.mediaTypes.hasOwnProperty('video') &&
+        bid.mediaTypes.video.hasOwnProperty('context')) {
         if (bid.mediaTypes.video.context === 'outstream') {
           adUnitMap[trId].isOutstream = true;
           if (bid.hasOwnProperty('renderer')) {
@@ -541,7 +540,7 @@ function getIxMFSettings(validBidRequests) {
 
   // Iterate over adunit map and populate MF diag object
   const adIds = Object.keys(adUnitMap);
-  for (var i = 0; i < adIds.length; ++i) {
+  for (let i = 0; i < adIds.length; ++i) {
     var adUnit = adUnitMap[adIds[i]];
     if (adUnit.hasOwnProperty('isMF') && adUnit.isMF === true) {
       ixdiagMF['mfUnits']++;
@@ -691,13 +690,12 @@ export const spec = {
     }
 
     if (mediaTypeVideoRef && paramsVideoRef) {
-      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols', 'protocol'];
+      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols'];
       let isParamsLevelValid = true;
       for (let property of requiredIXParams) {
         if (!mediaTypeVideoRef.hasOwnProperty(property) && !paramsVideoRef.hasOwnProperty(property)) {
-          const isProtocolValid = (property === 'protocol' && (mediaTypeVideoRef.hasOwnProperty('protocols') || paramsVideoRef.hasOwnProperty('protocols')));
           const isProtocolsValid = (property === 'protocols' && (mediaTypeVideoRef.hasOwnProperty('protocol') || paramsVideoRef.hasOwnProperty('protocol')));
-          if (isProtocolValid || isProtocolsValid) {
+          if (isProtocolsValid) {
             continue;
           }
           utils.logError('ix bidder params: ' + property + ' is not included in either the adunit or params level');
