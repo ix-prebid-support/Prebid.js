@@ -1402,7 +1402,7 @@ describe('IndexexchangeAdapter', function () {
       expect(impression.video.placement).to.equal(4);
     });
 
-    it('should not override whitelisted param level video properties with adunit level video params if both are configured', function () {
+    it('should not override video properties if they are already configured at the params video level', function () {
       const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
       bid.mediaTypes.video.context = 'outstream';
       bid.mediaTypes.video.protocols = [1];
