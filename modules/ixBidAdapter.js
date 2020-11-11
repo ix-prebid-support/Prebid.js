@@ -69,7 +69,7 @@ function bidToVideoImp(bid) {
   }
 
   for (let adUnitProperty in videoAdUnitRef) {
-    if (videoAdUnitWhitelist.includes(adUnitProperty)) {
+    if (videoAdUnitWhitelist.includes(adUnitProperty) && !imp.video.hasOwnProperty(adUnitProperty)) {
       imp.video[adUnitProperty] = videoAdUnitRef[adUnitProperty];
     }
   }
@@ -688,13 +688,12 @@ export const spec = {
     }
 
     if (mediaTypeVideoRef && paramsVideoRef) {
-      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols', 'protocol'];
+      const requiredIXParams = ['mimes', 'minduration', 'maxduration', 'protocols'];
       let isParamsLevelValid = true;
       for (let property of requiredIXParams) {
         if (!mediaTypeVideoRef.hasOwnProperty(property) && !paramsVideoRef.hasOwnProperty(property)) {
-          const isProtocolValid = (property === 'protocol' && (mediaTypeVideoRef.hasOwnProperty('protocols') || paramsVideoRef.hasOwnProperty('protocols')));
           const isProtocolsValid = (property === 'protocols' && (mediaTypeVideoRef.hasOwnProperty('protocol') || paramsVideoRef.hasOwnProperty('protocol')));
-          if (isProtocolValid || isProtocolsValid) {
+          if (isProtocolsValid) {
             continue;
           }
           utils.logError('ix bidder params: ' + property + ' is not included in either the adunit or params level');

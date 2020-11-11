@@ -1404,7 +1404,7 @@ describe('IndexexchangeAdapter', function () {
       expect(impression.video.placement).to.equal(4);
     });
 
-    it('should override whitelisted param level video properties with adunit level video params if both are configured', function () {
+    it('should not override video properties if they are already configured at the params video level', function () {
       const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
       bid.mediaTypes.video.context = 'outstream';
       bid.mediaTypes.video.protocols = [1];
@@ -1412,11 +1412,11 @@ describe('IndexexchangeAdapter', function () {
       const request = spec.buildRequests([bid])[0];
       const impression = JSON.parse(request.data.r).imp[0];
 
-      expect(impression.video.protocols[0]).to.equal(1);
-      expect(impression.video.mimes[0]).to.equal('video/override');
+      expect(impression.video.protocols[0]).to.equal(2);
+      expect(impression.video.mimes[0]).to.not.equal('video/override');
     });
 
-    it('should not use video adunit level properties in imp object if they are not whitelisted', function () {
+    it('should not add video adunit level properties in imp object if they are not whitelisted', function () {
       const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
       bid.mediaTypes.video.context = 'outstream';
       bid.mediaTypes.video.random = true;
@@ -1426,7 +1426,7 @@ describe('IndexexchangeAdapter', function () {
       expect(impression.video.random).to.not.exist;
     });
 
-    it('should use whitelisted adunit level video properties in imp object if they are not configured at params level', function () {
+    it('should add whitelisted adunit level video properties in imp object if they are not configured at params level', function () {
       const bid = utils.deepClone(DEFAULT_VIDEO_VALID_BID[0]);
       bid.mediaTypes.video.context = 'outstream';
       delete bid.params.video.protocols;
